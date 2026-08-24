@@ -1,6 +1,10 @@
 asgiref==3.12.1
 Django==6.1
+flake8==7.3.0
+mccabe==0.7.0
 psycopg==3.3.4
 psycopg-binary==3.3.4
+pycodestyle==2.14.0
+pyflakes==3.4.0
 sqlparse==0.6.0
 tzdata==2026.3
