@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "1"
+      DATABASE_NAME: book_review
+      DATABASE_USER: book_review
+      DATABASE_PASSWORD: book_review
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: book_review
+      POSTGRES_USER: book_review
+      POSTGRES_PASSWORD: book_review
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
