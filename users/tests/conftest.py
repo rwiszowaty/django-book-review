@@ -3,6 +3,7 @@ import re
 
 from django.urls import reverse
 from django.core import mail
+from allauth.account.models import EmailAddress
 
 
 @pytest.fixture
@@ -59,3 +60,25 @@ def confirmation_url(verification_email):
     assert match is not None
 
     return match.group(0)
+
+
+@pytest.fixture
+def verified_user(django_user_model, signup_data):
+    user = django_user_model.objects.create_user(
+        email=signup_data["email"],
+        password=signup_data["password1"],
+    )
+
+    EmailAddress.objects.create(
+        user=user, email=user.email, primary=True, verified=True
+    )
+
+    return user
+
+
+@pytest.fixture
+def login_data(signup_data):
+    return {
+        "login": signup_data["email"],
+        "password": signup_data["password1"],
+    }
