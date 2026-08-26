@@ -163,3 +163,9 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = {"email*", "password1*", "password2*"}
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
+ACCOUNT_CHANGE_EMAIL = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_FORMS = {
+    "add_email": "users.forms.CustomAddEmailForm",
+}
