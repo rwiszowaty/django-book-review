@@ -48,7 +48,6 @@ def test_user_can_confirm_email(client, confirmation_url, verification_signup_da
 
     assert email_address.verified is False
 
-    print(f"Confirmation url: {confirmation_url}")
     response = client.get(confirmation_url)
 
     assert response.status_code == 200
