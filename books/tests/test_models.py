@@ -124,6 +124,15 @@ class TestBook:
                 isbn=book.isbn,
             )
 
+    def test_isbn_is_normalized(self):
+        book = Book.objects.create(
+            title="The Eye of the World",
+            slug="the-eye-of-the-world",
+            isbn="978-83-1234-56-7",
+        )
+
+        assert book.isbn == "978831234567"
+
     def test_book_ordering(self, book):
         Book.objects.create(
             title="The eye of the world",

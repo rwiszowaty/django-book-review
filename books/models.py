@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 # Create your models here.
@@ -58,3 +60,7 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        self.isbn = re.sub(r"[-\s]", "", self.isbn)
+        super().save(*args, **kwargs)
