@@ -33,7 +33,7 @@ class Book(models.Model):
     description = models.TextField(blank=True)
     isbn = models.CharField(max_length=13, unique=True)
     publication_date = models.DateField(null=True, blank=True)
-    pages = models.PositiveBigIntegerField(null=True, blank=True)
+    pages = models.PositiveIntegerField(null=True, blank=True)
     cover = models.ImageField(
         upload_to="book_covers/",
         blank=True,
