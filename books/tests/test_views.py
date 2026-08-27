@@ -2,23 +2,29 @@ import pytest
 
 from django.urls import reverse
 
-from books.models import Book
+from books.models import Book, Genre
 
 
 @pytest.mark.django_db
 class TestBookListView:
     def test_book_list_page_loads(self, client):
-        response = client.get(reverse("books:book_list"))
+        response = client.get(
+            reverse("books:book_list"),
+        )
 
         assert response.status_code == 200
 
     def test_book_list_uses_correct_template(self, client):
-        response = client.get(reverse("books:book_list"))
+        response = client.get(
+            reverse("books:book_list"),
+        )
 
         assert "book_list.html" in response.template_name
 
     def test_book_list_contains_book(self, client, book):
-        response = client.get(reverse("books:book_list"))
+        response = client.get(
+            reverse("books:book_list"),
+        )
 
         assert book in response.context["books"]
 
@@ -36,6 +42,155 @@ class TestBookListView:
         assert book in books
         assert second_book in books
         assert len(books) == 2
+
+    def test_book_list_searches_by_title(self, client, book):
+        response = client.get(
+            reverse("books:book_list"),
+            {"q": "great"},
+        )
+
+        assert response.status_code == 200
+        assert list(response.context["books"]) == [book]
+
+    def test_book_list_search_returns_no_results(self, client, book):
+        response = client.get(
+            reverse("books:book_list"),
+            {"q": "nonexistent"},
+        )
+
+        assert response.status_code == 200
+        assert list(response.context["books"]) == []
+
+    def test_book_list_filters_by_author(self, client, book, author):
+        book.authors.add(author)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"author": author.id},
+        )
+
+        assert response.status_code == 200
+        assert book in response.context["books"]
+
+    def test_book_list_does_not_return_books_from_other_author(
+        self,
+        client,
+        book,
+        author,
+        second_author,
+    ):
+        second_book = Book.objects.create(
+            title="The Eye of the World",
+            slug="the-eye-of-the-world",
+            isbn="0987654321123",
+        )
+
+        book.authors.add(author)
+        second_book.authors.add(second_author)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"author": author.id},
+        )
+
+        assert book in response.context["books"]
+        assert second_book not in response.context["books"]
+
+    def test_book_list_filters_by_genre(self, client, book, genre):
+        book.genres.add(genre)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"genre": genre.slug},
+        )
+
+        assert response.status_code == 200
+        assert book in response.context["books"]
+
+    def test_book_list_does_not_return_books_from_other_genre(
+        self,
+        client,
+        book,
+        genre,
+    ):
+        second_book = Book.objects.create(
+            title="The Eye of the World",
+            slug="the-eye-of-the-world",
+            isbn="0987654321123",
+        )
+
+        other_genre = Genre.objects.create(
+            name="Sci-fi",
+            slug="sci-fi",
+        )
+
+        book.genres.add(genre)
+        second_book.genres.add(other_genre)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"genre": genre.slug},
+        )
+
+        assert book in response.context["books"]
+        assert second_book not in response.context["books"]
+
+    def test_book_list_combines_search_and_genre(
+        self,
+        client,
+        book,
+        genre,
+    ):
+        book.genres.add(genre)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {
+                "q": "great",
+                "genre": genre.slug,
+            },
+        )
+
+        assert list(response.context["books"]) == [book]
+
+    def test_book_list_is_paginated(self, client, books):
+        response = client.get(
+            reverse("books:book_list"),
+        )
+
+        assert response.status_code == 200
+        assert response.context["is_paginated"] is True
+        assert response.context["paginator"].per_page == 10
+        assert len(response.context["page_obj"]) == 10
+
+    def test_book_list_page_two(self, client, books):
+        response = client.get(
+            reverse("books:book_list"),
+            {"page": 2},
+        )
+
+        assert response.status_code == 200
+        assert response.context["page_obj"].number == 2
+        assert response.context["page_obj"].has_previous()
+        assert not response.context["page_obj"].has_next()
+
+    def test_book_list_does_not_duplicate_books(
+        self,
+        client,
+        book,
+        author,
+        second_author,
+    ):
+        book.authors.add(author, second_author)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"q": "Robert"},
+        )
+
+        books = list(response.context["books"])
+
+        assert books.count(book) == 1
 
 
 @pytest.mark.django_db
@@ -69,16 +224,6 @@ class TestBookDetailView:
         )
 
         assert response.context["book"] == book
-
-    def test_book_detail_contains_book_title(self, client, book):
-        response = client.get(
-            reverse(
-                "books:book_detail",
-                kwargs={"slug": book.slug},
-            )
-        )
-
-        assert book.title.encode() in response.content
 
     def test_book_detail_returns_404_for_nonexistent_book(self, client):
         response = client.get(

@@ -42,6 +42,18 @@ def book():
 
 
 @pytest.fixture
+def books():
+    return [
+        Book.objects.create(
+            title=f"Book {number}",
+            slug=f"book-{number}",
+            isbn=f"1234567890{number:03}",
+        )
+        for number in range(11)
+    ]
+
+
+@pytest.fixture
 def image_file():
     image = Image.new("RGB", (100, 100), "white")
 
