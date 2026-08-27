@@ -1,6 +1,111 @@
 <!--templates/booklist.html -->
 {% extends "_base.html" %}
-<h1>Lista ksiażek:</h1>
-{% block content %}
 
-{% endblock content %}
+{% block title %}Książki - Recenzje książek{% endblock %}
+
+{% block content %}
+    <h1>Książki</h1>
+
+    <form method="get">
+        <div>
+            <label for="id_q">Szukaj:</label>
+            <input
+                type="text"
+                name="q"
+                id="id_q"
+                value="{{ request.GET.q }}"
+                placeholder="Tytuł lub autor"
+            >
+        </div>
+
+        <div>
+            <label for="id_author">Autor:</label>
+            <select name="author" id="id_author">
+                <option value="">Wszyscy autorzy</option>
+
+                {% for author in authors %}
+                    <option
+                        value="{{ author.id }}"
+                        {% if request.GET.author == author.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ author }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="id_genre">Gatunek:</label>
+            <select name="genre" id="id_genre">
+                <option value="">Wszystkie gatunki</option>
+
+                {% for genre in genres %}
+                    <option
+                        value="{{ genre.slug }}"
+                        {% if request.GET.genre == genre.slug %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ genre.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Szukaj</button>
+    </form>
+
+    {% if books %}
+        <ul>
+            {% for book in books %}
+                <li>
+                    <a href="{% url 'books:book_detail' book.slug %}">
+                        {{ book.title }}
+                    </a>
+
+                    {% if book.authors.all %}
+                        <div>
+                            Autorzy:
+                            {% for author in book.authors.all %}
+                                {{ author }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if book.genres.all %}
+                        <div>
+                            Gatunki:
+                            {% for genre in book.genres.all %}
+                                {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie znaleziono książek.</p>
+    {% endif %}
+
+    {% if is_paginated %}
+        <nav aria-label="Paginacja">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">
+                    Poprzednia
+                </a>
+            {% endif %}
+
+            <span>
+                Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">
+                    Następna
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

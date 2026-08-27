@@ -1,10 +1,36 @@
 <!-- templates/_base.html -->
-<html>
-<header>
-    <title>{% block title %}{% endblock title %}</title>
-</header>
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}{{ site_name }}{% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
 <body>
-{% block content%}
-{% endblock content %}
+    <header>
+        <nav>
+            <a href="{% url 'books:book_list' %}">
+                {{ site_name }}
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Recenzje książek</p>
+    </footer>
 </body>
 </html>
+

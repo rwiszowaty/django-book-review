@@ -1,8 +1,74 @@
 <!-- templates/book_detail.html -->
 {% extends "_base.html" %}
 
-{% block title%}{{ book.title }}{% endblock title%}
+{% block title %}{{ book.title }} - Recenzje książek{% endblock %}
 
 {% block content %}
-    <h1>{{ block.title }}</h1>
-{% endblock content %}
+    <article>
+        <h1>{{ book.title }}</h1>
+
+        {% if book.cover %}
+            <div>
+                <img
+                    src="{{ book.cover.url }}"
+                    alt="Okładka książki {{ book.title }}"
+                >
+            </div>
+        {% endif %}
+
+        <section>
+            <h2>Informacje o książce</h2>
+
+            <p>
+                <strong>Autor:</strong>
+                {% for author in book.authors.all %}
+                    {{ author }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Brak informacji
+                {% endfor %}
+            </p>
+
+            <p>
+                <strong>Gatunek:</strong>
+                {% for genre in book.genres.all %}
+                    {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Brak informacji
+                {% endfor %}
+            </p>
+
+            {% if book.isbn %}
+                <p>
+                    <strong>ISBN:</strong> {{ book.isbn }}
+                </p>
+            {% endif %}
+
+            {% if book.publication_date %}
+                <p>
+                    <strong>Data wydania:</strong>
+                    {{ book.publication_date|date:"d.m.Y" }}
+                </p>
+            {% endif %}
+
+            {% if book.pages %}
+                <p>
+                    <strong>Liczba stron:</strong> {{ book.pages }}
+                </p>
+            {% endif %}
+        </section>
+
+        {% if book.description %}
+            <section>
+                <h2>Opis</h2>
+                <p>{{ book.description }}</p>
+            </section>
+        {% endif %}
+    </article>
+
+    <p>
+        <a href="{% url 'books:book_list' %}">
+            &larr; Wróć do listy książek
+        </a>
+    </p>
+{% endblock %}
+

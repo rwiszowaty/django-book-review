@@ -46,8 +46,8 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     # Local
-    "users",
-    "books",
+    "users.apps.UsersConfig",
+    "books.apps.BooksConfig",
 ]
 
 MIDDLEWARE = [
@@ -152,8 +152,9 @@ DEFAULT_FROM_EMAIL = env(
 
 AUTH_USER_MODEL = "users.CustomUser"
 
-# Allauth settings
+SITE_NAME = "Recenzje książek"
 SITE_ID = 1
+# Allauth settings
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",

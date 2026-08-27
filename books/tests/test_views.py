@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from django.urls import reverse
@@ -47,6 +49,17 @@ class TestBookListView:
         response = client.get(
             reverse("books:book_list"),
             {"q": "great"},
+        )
+
+        assert response.status_code == 200
+        assert list(response.context["books"]) == [book]
+
+    def test_book_list_searches_by_author(self, client, book, author):
+        book.authors.add(author)
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"q": "Jordan"},
         )
 
         assert response.status_code == 200
@@ -192,6 +205,33 @@ class TestBookListView:
 
         assert books.count(book) == 1
 
+    def test_book_list_template(self, client, book, author, genre):
+        book.authors.add(author)
+        book.genres.add(genre)
+
+        response = client.get(reverse("books:book_list"))
+
+        assert book.title.encode() in response.content
+        assert author.first_name.encode() in response.content
+        assert author.last_name.encode() in response.content
+        assert genre.name.encode() in response.content
+
+    def test_book_list_template_contains_search_form(self, client):
+        response = client.get(
+            reverse("books:book_list"),
+        )
+
+        assert b'name="q"' in response.content
+        assert b'name="author"' in response.content
+        assert b'name="genre"' in response.content
+
+    def test_book_list_template_shows_no_result_message(self, client):
+        response = client.get(
+            reverse("books:book_list"),
+        )
+
+        assert "Nie znaleziono książek.".encode() in response.content
+
 
 @pytest.mark.django_db
 class TestBookDetailView:
@@ -234,3 +274,49 @@ class TestBookDetailView:
         )
 
         assert response.status_code == 404
+
+    def test_book_detail_template(
+        self,
+        client,
+        book,
+        author,
+        genre,
+        image_file,
+        media_root,
+    ):
+        book.authors.add(author)
+        book.genres.add(genre)
+        book.description = "Short description."
+        book.pages = 500
+        book.publication_date = date(1985, 1, 1)
+        book.cover = image_file
+
+        book.save()
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert author.first_name.encode() in response.content
+        assert author.last_name.encode() in response.content
+        assert genre.name.encode() in response.content
+        assert book.description.encode() in response.content
+        assert book.isbn.encode() in response.content
+        assert b"Liczba stron:</strong> 500" in response.content
+        assert b"01.01.1985" in response.content
+        assert book.cover.url.encode() in response.content
+        assert f"Okładka książki {book.title}".encode() in response.content
+
+    def test_book_detail_template_without_cover(self, client, book):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == 200
+        assert b"<img" not in response.content
