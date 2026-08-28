@@ -54,6 +54,15 @@ def books():
 
 
 @pytest.fixture
+def user(django_user_model):
+    user = django_user_model.objects.create_user(
+        email="test@example.com",
+        password="StrongPassword123!",
+    )
+    return user
+
+
+@pytest.fixture
 def image_file():
     image = Image.new("RGB", (100, 100), "white")
 

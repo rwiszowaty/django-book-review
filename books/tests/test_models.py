@@ -3,8 +3,9 @@ from datetime import date
 import pytest
 
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
-from books.models import Author, Book, Genre
+from books.models import Author, Book, Genre, Review
 
 
 @pytest.mark.django_db
@@ -158,3 +159,69 @@ class TestBook:
         assert book.cover.name.startswith("book_covers/")
         assert book.cover.name.endswith(".jpg")
         assert book.cover.storage.exists(book.cover.name)
+
+
+@pytest.mark.django_db
+class TestReview:
+    def test_create_review(self, book, user):
+        review = Review.objects.create(
+            book=book,
+            user=user,
+            content="Example of review.",
+            rating=5,
+        )
+
+        assert review.book == book
+        assert review.user == user
+        assert review.content == "Example of review."
+        assert review.rating == 5
+        assert review.created_at is not None
+        assert review.updated_at is not None
+
+    def test_review_str(self, book, user):
+        review = Review.objects.create(
+            book=book,
+            user=user,
+            content="Example of review.",
+            rating=5,
+        )
+
+        assert str(review) == f"{user} - {book}"
+
+    def test_user_review_book_only_once(self, book, user):
+        Review.objects.create(
+            book=book,
+            user=user,
+            content="First review.",
+            rating=5,
+        )
+
+        with pytest.raises(IntegrityError):
+            Review.objects.create(
+                book=book,
+                user=user,
+                content="Second review.",
+                rating=1,
+            )
+
+    def test_review_rating_canont_be_less_than_one(self, book, user):
+        review = Review(
+            book=book,
+            user=user,
+            content="Example of review.",
+            rating=0,
+        )
+
+        with pytest.raises(ValidationError):
+            review.full_clean()
+
+    def test_review_rating_canont_be_greater_than_one(self, book, user):
+        review = Review(
+            book=book,
+            user=user,
+            content="Example of review.",
+            rating=6,
+        )
+
+        with pytest.raises(ValidationError):
+            review.full_clean()

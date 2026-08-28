@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Author, Book, Genre
+from .models import Author, Book, Genre, Review
 
 
 @admin.register(Author)
@@ -37,3 +37,30 @@ class BookAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     date_hierarchy = "publication_date"
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        "book",
+        "user",
+        "rating",
+        "created_at",
+        "updated_at",
+    )
+
+    search_fields = (
+        "book__title",
+        "user__email",
+        "content",
+    )
+
+    list_filter = (
+        "rating",
+        "created_at",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
