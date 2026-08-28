@@ -300,12 +300,14 @@ class TestBookDetailView:
             )
         )
 
+        assert book.title.encode() in response.content
         assert author.first_name.encode() in response.content
         assert author.last_name.encode() in response.content
         assert genre.name.encode() in response.content
         assert book.description.encode() in response.content
         assert book.isbn.encode() in response.content
-        assert b"Liczba stron:</strong> 500" in response.content
+        assert b"Liczba stron:" in response.content
+        assert b"500" in response.content
         assert b"01.01.1985" in response.content
         assert book.cover.url.encode() in response.content
         assert f"Okładka książki {book.title}".encode() in response.content
@@ -320,3 +322,26 @@ class TestBookDetailView:
 
         assert response.status_code == 200
         assert b"<img" not in response.content
+        assert "Brak okładki".encode() in response.content
+
+    def test_book_detail_template_contains_back_link(self, client, book):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert "Powrót do książek".encode() in response.content
+        assert reverse("books:book_list").encode() in response.content
+
+    def test_book_detail_template_without_description(self, client, book):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == 200
+        assert b"Opis" not in response.content

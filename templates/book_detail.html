@@ -1,74 +1,122 @@
-<!-- templates/book_detail.html -->
 {% extends "_base.html" %}
 
 {% block title %}{{ book.title }} - Recenzje książek{% endblock %}
 
 {% block content %}
-    <article>
-        <h1>{{ book.title }}</h1>
 
-        {% if book.cover %}
-            <div>
-                <img
-                    src="{{ book.cover.url }}"
-                    alt="Okładka książki {{ book.title }}"
-                >
+<div class="mb-4">
+    <a
+        href="{% url 'books:book_list' %}"
+        class="back-to-books text-decoration-none"
+    >
+        &laquo; Powrót do książek
+    </a>
+</div>
+
+
+<div class="card border-0 shadow-sm">
+
+    <div class="card-body p-4">
+
+        <div class="row g-4">
+
+            <div class="col-12 col-md-4 col-lg-3">
+
+                {% if book.cover %}
+                    <img
+                        src="{{ book.cover.url }}"
+                        class="img-fluid book-detail-cover"
+                        alt="Okładka książki {{ book.title }}"
+                    >
+                {% else %}
+                    <div
+                        class="book-detail-cover d-flex
+                        align-items-center justify-content-center
+                        bg-secondary text-white"
+                    >
+                        Brak okładki
+                    </div>
+                {% endif %}
+
             </div>
-        {% endif %}
 
-        <section>
-            <h2>Informacje o książce</h2>
 
-            <p>
-                <strong>Autor:</strong>
-                {% for author in book.authors.all %}
-                    {{ author }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Brak informacji
-                {% endfor %}
-            </p>
+            <div class="col-12 col-md-8 col-lg-9">
 
-            <p>
-                <strong>Gatunek:</strong>
-                {% for genre in book.genres.all %}
-                    {{ genre.name }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                    Brak informacji
-                {% endfor %}
-            </p>
+                <h1 class="mb-3">
+                    {{ book.title }}
+                </h1>
 
-            {% if book.isbn %}
-                <p>
-                    <strong>ISBN:</strong> {{ book.isbn }}
-                </p>
-            {% endif %}
 
-            {% if book.publication_date %}
-                <p>
-                    <strong>Data wydania:</strong>
-                    {{ book.publication_date|date:"d.m.Y" }}
-                </p>
-            {% endif %}
+                {% if book.authors.all %}
+                    <p>
+                        <strong>Autor:</strong>
 
-            {% if book.pages %}
-                <p>
-                    <strong>Liczba stron:</strong> {{ book.pages }}
-                </p>
-            {% endif %}
-        </section>
+                        {% for author in book.authors.all %}
+                            {{ author.first_name }}
+                            {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+
+                {% if book.genres.all %}
+                    <p>
+                        <strong>Gatunek:</strong>
+
+                        {% for genre in book.genres.all %}
+                            {{ genre.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+
+                {% if book.isbn %}
+                    <p>
+                        <strong>ISBN:</strong>
+                        {{ book.isbn }}
+                    </p>
+                {% endif %}
+
+
+                {% if book.pages %}
+                    <p>
+                        <strong>Liczba stron:</strong>
+                        {{ book.pages }}
+                    </p>
+                {% endif %}
+
+
+                {% if book.publication_date %}
+                    <p>
+                        <strong>Data wydania:</strong>
+                        {{ book.publication_date|date:"d.m.Y" }}
+                    </p>
+                {% endif %}
+
+            </div>
+
+        </div>
+
 
         {% if book.description %}
+            <hr class="my-4">
+
             <section>
-                <h2>Opis</h2>
-                <p>{{ book.description }}</p>
+
+                <h2 class="h4 mb-3">
+                    Opis
+                </h2>
+
+                <div>
+                    {{ book.description|linebreaks }}
+                </div>
+
             </section>
         {% endif %}
-    </article>
 
-    <p>
-        <a href="{% url 'books:book_list' %}">
-            &larr; Wróć do listy książek
-        </a>
-    </p>
+    </div>
+
+</div>
+
 {% endblock %}
-

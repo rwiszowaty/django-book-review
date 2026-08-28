@@ -1,111 +1,226 @@
-<!--templates/booklist.html -->
 {% extends "_base.html" %}
 
 {% block title %}Książki - Recenzje książek{% endblock %}
 
 {% block content %}
-    <h1>Książki</h1>
+
+{% if books %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-4">
+
+        {% for book in books %}
+            <div class="col">
+                <div class="card h-100 shadow-none border-0">
+
+                    {% if book.cover %}
+                        <img
+                            src="{{ book.cover.url }}"
+                            class="card-img-top book-cover"
+                            alt="Okładka książki {{ book.title }}"
+                        >
+                    {% else %}
+                        <div
+                            class="card-img-top book-cover d-flex align-items-center justify-content-center bg-secondary text-white"
+                        >
+                            Brak okładki
+                        </div>
+                    {% endif %}
+
+                    <div class="card-body">
+                        <h2 class="card-title text-center fs-5">
+                            <a
+                                href="{% url 'books:book_detail' book.slug %}"
+                                class="book-title text-decoration-none"
+                            >
+                                {{ book.title }}
+                            </a>
+                        </h2>
+
+                        {% if book.authors.all %}
+                            <p class="card-text mb-1">
+                                <strong>Autor:</strong>
+
+                                {% for author in book.authors.all %}
+                                    {{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Nie znaleziono książek.
+    </div>
+{% endif %}
+
+
+<div class="mt-5 pt-4 border-top">
+
+    <h2 class="h4 mb-3">Wyszukiwanie i filtrowanie</h2>
 
     <form method="get">
-        <div>
-            <label for="id_q">Szukaj:</label>
-            <input
-                type="text"
-                name="q"
-                id="id_q"
-                value="{{ request.GET.q }}"
-                placeholder="Tytuł lub autor"
-            >
-        </div>
 
-        <div>
-            <label for="id_author">Autor:</label>
-            <select name="author" id="id_author">
-                <option value="">Wszyscy autorzy</option>
+        <div class="row g-3">
 
-                {% for author in authors %}
-                    <option
-                        value="{{ author.id }}"
-                        {% if request.GET.author == author.id|stringformat:"s" %}
-                            selected
-                        {% endif %}
+            <div class="col-12">
+                <label
+                    for="search"
+                    class="form-label"
+                >
+                    Szukaj książki
+                </label>
+
+                <div class="input-group">
+                    <input
+                        type="search"
+                        id="search"
+                        name="q"
+                        value="{{ request.GET.q }}"
+                        class="form-control"
+                        placeholder="Tytuł, autor..."
                     >
-                        {{ author }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
 
-        <div>
-            <label for="id_genre">Gatunek:</label>
-            <select name="genre" id="id_genre">
-                <option value="">Wszystkie gatunki</option>
-
-                {% for genre in genres %}
-                    <option
-                        value="{{ genre.slug }}"
-                        {% if request.GET.genre == genre.slug %}
-                            selected
-                        {% endif %}
+                    <button
+                        type="submit"
+                        class="btn btn-search"
                     >
-                        {{ genre.name }}
-                    </option>
-                {% endfor %}
-            </select>
+                        Szukaj
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label
+                    for="author"
+                    class="form-label"
+                >
+                    Autor
+                </label>
+
+                <select
+                    name="author"
+                    id="author"
+                    class="form-select"
+                >
+                    <option value="">Wszyscy autorzy</option>
+
+                    {% for author in authors %}
+                        <option
+                            value="{{ author.id }}"
+                            {% if request.GET.author == author.id|stringformat:"s" %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ author.first_name }} {{ author.last_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label
+                    for="genre"
+                    class="form-label"
+                >
+                    Gatunek
+                </label>
+
+                <select
+                    name="genre"
+                    id="genre"
+                    class="form-select"
+                >
+                    <option value="">Wszystkie gatunki</option>
+
+                    {% for genre in genres %}
+                        <option
+                            value="{{ genre.slug }}"
+                            {% if request.GET.genre == genre.slug %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ genre.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
         </div>
 
-        <button type="submit">Szukaj</button>
     </form>
 
-    {% if books %}
-        <ul>
-            {% for book in books %}
-                <li>
-                    <a href="{% url 'books:book_detail' book.slug %}">
-                        {{ book.title }}
-                    </a>
+</div>
 
-                    {% if book.authors.all %}
-                        <div>
-                            Autorzy:
-                            {% for author in book.authors.all %}
-                                {{ author }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
 
-                    {% if book.genres.all %}
-                        <div>
-                            Gatunki:
-                            {% for genre in book.genres.all %}
-                                {{ genre.name }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Nie znaleziono książek.</p>
-    {% endif %}
+{% if is_paginated %}
+    <nav
+        class="mt-4"
+        aria-label="Paginacja książek"
+    >
+        <ul class="pagination justify-content-center">
 
-    {% if is_paginated %}
-        <nav aria-label="Paginacja">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}">
-                    Poprzednia
-                </a>
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="{% querystring page=page_obj.previous_page_number %}"
+                        aria-label="Poprzednia strona"
+                    >
+                        &laquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
             {% endif %}
 
-            <span>
-                Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
-            </span>
+
+            {% for page_number in page_obj.paginator.get_elided_page_range %}
+                {% if page_number == page_obj.paginator.ELLIPSIS %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                {% else %}
+                    <li
+                        class="page-item
+                        {% if page_number == page_obj.number %}active{% endif %}"
+                    >
+                        <a
+                            class="page-link"
+                            href="{% querystring page=page_number %}"
+                        >
+                            {{ page_number }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">
-                    Następna
-                </a>
+                <li class="page-item">
+                    <a
+                        class="page-link"
+                        href="{% querystring page=page_obj.next_page_number %}"
+                        aria-label="Następna strona"
+                    >
+                        &raquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
             {% endif %}
-        </nav>
-    {% endif %}
+
+        </ul>
+    </nav>
+{% endif %}
+
 {% endblock %}
+
