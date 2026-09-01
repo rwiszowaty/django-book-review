@@ -11,7 +11,10 @@ def test_user_can_register_with_email(client, signup_data, django_user_model):
     )
 
     assert response.status_code == 302
-    assert django_user_model.objects.filter(email=signup_data["email"]).exists()
+
+    user = django_user_model.objects.get(email=signup_data["email"])
+
+    assert user.username is None
 
 
 @pytest.mark.django_db

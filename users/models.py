@@ -5,7 +5,12 @@ from .managers import CustomUserManager
 
 
 class CustomUser(AbstractUser):
-    username = None
+    username = models.CharField(
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True,
+    )
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = "email"
