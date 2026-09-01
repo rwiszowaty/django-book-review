@@ -4,7 +4,7 @@ import pytest
 
 from django.urls import reverse
 
-from books.models import Book, Genre
+from books.models import Book, Genre, Review
 
 
 @pytest.mark.django_db
@@ -345,3 +345,348 @@ class TestBookDetailView:
 
         assert response.status_code == 200
         assert b"Opis" not in response.content
+
+    def test_book_detail_contains_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        review = Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert review in response.context["book"].reviews.all()
+
+    def test_book_detail_template_contains_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b"Example of book review." in response.content
+
+    def test_book_detail_template_contains_review_username(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b"Nickname" in response.content
+        assert b"test@example.com" not in response.content
+
+    def test_book_detail_template_contains_reviews_rating(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b"5" in response.content
+
+    def test_book_detail_contains_mulditple_reviews(
+        self,
+        client,
+        book,
+        user_with_username,
+        django_user_model,
+    ):
+        second_user = django_user_model.objects.create_user(
+            email="second@example.com",
+            password="StrongPassword123!",
+            username="Second Reader",
+        )
+
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second book review.",
+            rating=4,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b"Example of book review." in response.content
+        assert b"Nickname" in response.content
+        assert b"Second book review." in response.content
+        assert b"Second Reader" in response.content
+
+    def test_book_detail_context_contains_user_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        review = Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.context["user_review"] == review
+
+    def test_book_detail_context_user_review_is_none_without_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.context["user_review"] is None
+
+    def test_book_detail_context_user_review_is_none_for_anonymous(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.context["user_review"] is None
+
+    def test_book_detail_template_shows_review_form_for_authenticated(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b'name="content"' in response.content
+        assert b'name="rating"' in response.content
+
+    def test_book_detail_hides_review_form_after_user_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert b'name="content"' not in response.content
+        assert b'name="rating"' not in response.content
+        assert "Dodałeś już recenzję".encode() in response.content
+
+    def test_book_detail_shows_login_message_for_anonymous_user(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert "Zaloguj się, aby dodać recenzję.".encode() in response.content
+        assert b'name="content"' not in response.content
+
+
+@pytest.mark.django_db
+class TestReviewView:
+    def test_anonymous_user_cannot_add_review(self, client, book):
+        response = client.post(
+            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            {
+                "content": "Example of book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == 302
+        assert "/accounts/login/" in response.url
+
+    def test_authenticated_user_can_add_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            {
+                "content": "Example of book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == 302
+        assert response.url == reverse(
+            "books:book_detail",
+            kwargs={"slug": book.slug},
+        )
+
+        review = Review.objects.get(
+            book=book,
+            user=user_with_username,
+        )
+
+        assert review.content == "Example of book review."
+        assert review.rating == 5
+
+    def test_user_cannot_add_second_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        Review.objects.create(
+            book=book,
+            user=user_with_username,
+            content="Example of book review.",
+            rating=5,
+        )
+
+        client.post(
+            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            {
+                "content": "Second review.",
+                "rating": 4,
+            },
+        )
+
+        assert (
+            Review.objects.filter(
+                book=book,
+                user=user_with_username,
+            ).count()
+            == 1
+        )
+
+    @pytest.mark.parametrize("rating", [0, 6])
+    def test_invalid_rating_does_not_create_review(
+        self,
+        client,
+        book,
+        user_with_username,
+        rating,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+            {
+                "content": "Example of book review.",
+                "rating": rating,
+            },
+        )
+
+        assert response.status_code == 200
+        assert not Review.objects.filter(
+            book=book,
+            user=user_with_username,
+        ).exists()

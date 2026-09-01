@@ -63,6 +63,13 @@ def user(django_user_model):
 
 
 @pytest.fixture
+def user_with_username(user):
+    user.username = "Nickname"
+    user.save(update_fields=["username"])
+    return user
+
+
+@pytest.fixture
 def image_file():
     image = Image.new("RGB", (100, 100), "white")
 

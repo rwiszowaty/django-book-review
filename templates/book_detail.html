@@ -115,6 +115,135 @@
             </section>
         {% endif %}
 
+
+        <hr class="my-4">
+
+        <section>
+
+            <h2 class="h4 mb-4">
+                Recenzje
+            </h2>
+
+            {% with reviews=book.reviews.all %}
+
+                {% if reviews %}
+
+                    {% for review in reviews %}
+
+                        <article class="review mb-4 pb-4 border-bottom">
+
+                            <div
+                                class="d-flex justify-content-between
+                                align-items-center mb-2"
+                            >
+                                <strong>
+                                    {{ review.user.username }}
+                                </strong>
+
+                                <span>
+                                    {{ review.rating }}/5
+                                </span>
+                            </div>
+
+                            <p class="mb-2">
+                                {{ review.content }}
+                            </p>
+
+                            <small class="text-muted">
+                                {{ review.created_at|date:"d.m.Y" }}
+                            </small>
+
+                        </article>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        Ta książka nie ma jeszcze żadnych recenzji.
+                    </p>
+
+                {% endif %}
+
+            {% endwith %}
+
+        </section>
+
+
+        <hr class="my-4">
+
+        <section>
+
+            <h2 class="h4 mb-3">
+                Dodaj recenzję
+            </h2>
+
+            {% if not user.is_authenticated %}
+
+                <p class="text-muted mb-0">
+                    Zaloguj się, aby dodać recenzję.
+                </p>
+
+            {% elif user_review %}
+
+                <p class="text-muted mb-0">
+                    Dodałeś już recenzję do tej książki.
+                </p>
+
+            {% else %}
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    {{ form.non_field_errors }}
+
+                    <div class="mb-3">
+
+                        {{ form.content }}
+
+                        {% for error in form.content.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="mb-3">
+
+                        <label
+                            for="{{ form.rating.id_for_label }}"
+                            class="form-label"
+                        >
+                            Ocena
+                        </label>
+
+                        {{ form.rating }}
+
+                        {% for error in form.rating.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-search"
+                    >
+                        Dodaj recenzję
+                    </button>
+
+                </form>
+
+            {% endif %}
+
+        </section>
+
     </div>
 
 </div>

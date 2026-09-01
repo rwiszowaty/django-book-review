@@ -1,7 +1,9 @@
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView
 
-from .models import Author, Book, Genre
+from .forms import ReviewForm
+from .models import Author, Book, Genre, Review
 
 
 class BookListView(ListView):
@@ -46,3 +48,49 @@ class BookDetailView(DetailView):
     context_object_name = "book"
     slug_field = "slug"
     slug_url_kwarg = "slug"
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("account_login")
+
+        self.object = self.get_object()
+
+        if Review.objects.filter(
+            book=self.object,
+            user=request.user,
+        ).exists():
+            return redirect(
+                "books:book_detail",
+                slug=self.object.slug,
+            )
+
+        form = ReviewForm(request.POST)
+
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.book = self.object
+            review.user = request.user
+            review.save()
+
+            return redirect(
+                "books:book_detail",
+                slug=self.object.slug,
+            )
+
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if "form" not in context:
+            context["form"] = ReviewForm()
+
+        if self.request.user.is_authenticated:
+            context["user_review"] = Review.objects.filter(
+                book=self.object,
+                user=self.request.user,
+            ).first()
+        else:
+            context["user_review"] = None
+
+        return context
