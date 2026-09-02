@@ -48,7 +48,20 @@
     color: #fff;
 }
 
+
 .btn-search:hover {
+    background-color: var(--site-brown-hover);
+    border-color: var(--site-brown-hover);
+    color: #fff;
+}
+
+.btn-save {
+    background-color: var(--site-brown);
+    border-color: var(--site-brown);
+    color: #fff;
+}
+
+.btn-save:hover {
     background-color: var(--site-brown-hover);
     border-color: var(--site-brown-hover);
     color: #fff;

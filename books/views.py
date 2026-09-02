@@ -50,10 +50,13 @@ class BookDetailView(DetailView):
     slug_url_kwarg = "slug"
 
     def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
         if not request.user.is_authenticated:
             return redirect("account_login")
 
-        self.object = self.get_object()
+        if not request.user.username:
+            return redirect("users:set_username")
 
         if Review.objects.filter(
             book=self.object,

@@ -593,7 +593,10 @@ class TestBookDetailView:
 class TestReviewView:
     def test_anonymous_user_cannot_add_review(self, client, book):
         response = client.post(
-            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
             {
                 "content": "Example of book review.",
                 "rating": 5,
@@ -612,7 +615,10 @@ class TestReviewView:
         client.force_login(user_with_username)
 
         response = client.post(
-            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
             {
                 "content": "Example of book review.",
                 "rating": 5,
@@ -649,7 +655,10 @@ class TestReviewView:
         )
 
         client.post(
-            reverse("books:book_detail", kwargs={"slug": book.slug}),
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
             {
                 "content": "Second review.",
                 "rating": 4,
@@ -689,4 +698,29 @@ class TestReviewView:
         assert not Review.objects.filter(
             book=book,
             user=user_with_username,
+        ).exists()
+
+    def test_user_without_username_cannot_add_review(
+        self,
+        client,
+        book,
+        user,
+    ):
+        client.force_login(user)
+
+        response = client.post(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+            {
+                "content": "Example of book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == 302
+        assert not Review.objects.filter(
+            book=book,
+            user=user,
         ).exists()

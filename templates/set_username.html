@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+
+{% block title %}Ustaw nazwę użytkownika{% endblock title %}
+
+{% block content %}
+<h1>Ustaw nazwę użytkownika</h1>
+
+<p>
+    Nazwa użytkownika będzie wyświetlana przy Twoich recenzjach.
+</p>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-save">Zapisz</button>
+</form>
+
+{% endblock content %}
