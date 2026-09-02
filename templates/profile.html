@@ -1,0 +1,59 @@
+{% extends "_base.html" %}
+
+{% block title %}Mój profil{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h2">Mój profil</h1>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h2 class="h4 mb-3">Dane użytkownika</h2>
+
+        <p class="mb-0">
+            <strong>Nazwa użytkownika:</strong>
+            {{ profile_user.username }}
+        </p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h2 class="h4 mb-4">Moje recenzje</h2>
+
+        {% if reviews %}
+            {% for review in reviews %}
+                <article class="review mb-4 pb-4 border-bottom">
+                    <h3 class="h5 mb-2">
+                        <a
+                            href="{% url 'books:book_detail' review.book.slug %}"
+                            class="text-decoration-none"
+                        >
+                            {{ review.book.title }}
+                        </a>
+                    </h3>
+
+                    <p class="mb-2">
+                        {{ review.content }}
+                    </p>
+
+                    <div class="mb-2">
+                        <strong>Ocena:</strong>
+                        {{ review.rating }}/5
+                    </div>
+
+                    <small class="text-muted">
+                        {{ review.created_at|date:"d.m.Y" }}
+                    </small>
+                </article>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">
+                Nie masz jeszcze żadnych recenzji.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

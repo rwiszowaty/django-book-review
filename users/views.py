@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView
 
 from .forms import UsernameForm
 
@@ -20,3 +20,15 @@ class SetUsernameView(LoginRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse("books:book_list")
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["profile_user"] = self.request.user
+        context["reviews"] = self.request.user.reviews.select_related(
+            "book",
+        ).all()
+        return context

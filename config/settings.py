@@ -175,3 +175,5 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_FORMS = {
     "add_email": "users.forms.CustomAddEmailForm",
 }
+
+LOGIN_REDIRECT_URL = "/"

@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.core import mail
 from allauth.account.models import EmailAddress
 
+from books.models import Book, Review
+
 
 @pytest.fixture
 def signup_data():
@@ -82,3 +84,31 @@ def login_data(signup_data):
         "login": signup_data["email"],
         "password": signup_data["password1"],
     }
+
+
+@pytest.fixture
+def user_with_username(django_user_model):
+    return django_user_model.objects.create(
+        email="test@example.com",
+        password="StrongPassword123!",
+        username="Nickname",
+    )
+
+
+@pytest.fixture
+def book():
+    return Book.objects.create(
+        title="The great hunt",
+        slug="the-great-hunt",
+        isbn="1234567890123",
+    )
+
+
+@pytest.fixture
+def review(book, user_with_username):
+    return Review.objects.create(
+        book=book,
+        user=user_with_username,
+        content="Example of book review.",
+        rating=5,
+    )

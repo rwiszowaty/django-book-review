@@ -12,6 +12,7 @@ def test_user_can_login(client, verified_user, login_data):
     )
 
     assert response.status_code == 302
+    assert response.url == reverse("books:book_list")
     assert response.wsgi_request.user.is_authenticated
     assert response.wsgi_request.user == verified_user
 

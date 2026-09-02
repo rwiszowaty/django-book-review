@@ -90,3 +90,21 @@
     color: #fff;
 }
 
+.search-icon {
+    color: var(--site-brown);
+}
+
+.search-icon:hover,
+.search-icon:focus {
+    color: var(--site-brown-hover);
+    box-shadow: none;
+}
+
+.profile-icon {
+    color: #fff;
+    font-size: 1.8rem;
+}
+
+.profile-icon:hover {
+    color: var(--site-brown-light);
+}
