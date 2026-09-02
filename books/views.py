@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.views.generic import DetailView, ListView, UpdateView
+from django.views.generic import DeleteView, DetailView, ListView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import ReviewForm
@@ -105,6 +105,23 @@ class ReviewUpdateView(LoginRequiredMixin, UpdateView):
     model = Review
     form_class = ReviewForm
     template_name = "review_edit.html"
+    context_object_name = "review"
+
+    def get_queryset(self):
+        return Review.objects.filter(
+            user=self.request.user,
+        )
+
+    def get_success_url(self):
+        return reverse(
+            "books:book_detail",
+            kwargs={"slug": self.object.book.slug},
+        )
+
+
+class ReviewDeleteView(LoginRequiredMixin, DeleteView):
+    model = Review
+    template_name = "review_delete.html"
     context_object_name = "review"
 
     def get_queryset(self):

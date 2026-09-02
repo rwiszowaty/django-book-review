@@ -731,7 +731,6 @@ class TestReviewUpdateView:
     def test_user_can_access_edit_view(
         self,
         client,
-        book,
         review,
         user_with_username,
     ):
@@ -749,7 +748,6 @@ class TestReviewUpdateView:
     def test_edit_view_contains_curret_review_data(
         self,
         client,
-        book,
         review,
         user_with_username,
     ):
@@ -770,7 +768,6 @@ class TestReviewUpdateView:
     def test_user_can_update_own_review(
         self,
         client,
-        book,
         review,
         user_with_username,
     ):
@@ -797,9 +794,7 @@ class TestReviewUpdateView:
     def test_user_cannot_update_anothers_user_review(
         self,
         client,
-        book,
         review,
-        user_with_username,
         django_user_model,
     ):
         second_user = django_user_model.objects.create(
@@ -821,7 +816,6 @@ class TestReviewUpdateView:
     def test_anonymous_user_is_redirected_to_login(
         self,
         client,
-        book,
         review,
         user_with_username,
     ):
@@ -867,3 +861,112 @@ class TestReviewUpdateView:
         )
 
         assert not "Edytuj recenzję".encode() in response.content
+
+
+@pytest.mark.django_db
+class TestReviewDeleteView:
+    def test_user_can_access_delete_view(
+        self,
+        client,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:review_delete",
+                kwargs={"pk": review.pk},
+            ),
+        )
+
+        assert response.status_code == 200
+
+    def test_user_can_delete_own_review(
+        self,
+        client,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:review_delete",
+                kwargs={"pk": review.pk},
+            ),
+        )
+
+        assert response.status_code == 302
+        assert not Review.objects.filter(pk=review.pk).exists()
+
+    def test_user_cannot_delete_another_user_review(
+        self,
+        client,
+        review,
+        django_user_model,
+    ):
+        second_user = django_user_model.objects.create(
+            email="second_user@example.com",
+            password="StrongPassword123!",
+            username="Second User",
+        )
+
+        client.force_login(second_user)
+
+        response = client.post(
+            reverse(
+                "books:review_delete",
+                kwargs={"pk": review.pk},
+            )
+        )
+
+        assert response.status_code == 404
+
+    def test_anonymous_user_is_redirected_to_login(
+        self,
+        client,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "books:review_delete",
+                kwargs={"pk": review.pk},
+            )
+        )
+
+        assert response.status_code == 302
+        assert "/accounts/login/" in response.url
+
+    def test_book_detail_shows_delete_button_for_own_review(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert "Usuń recenzję".encode() in response.content
+
+    def test_book_detail_does_not_show_edit_delete_for_anonymous(
+        self,
+        client,
+        book,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert not "Usuń recenzję".encode() in response.content
