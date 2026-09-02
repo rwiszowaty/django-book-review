@@ -5,7 +5,7 @@ from PIL import Image
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from books.models import Author, Book, Genre
+from books.models import Author, Book, Genre, Review
 
 
 @pytest.fixture
@@ -88,3 +88,13 @@ def image_file():
 def media_root(tmp_path, settings):
     settings.MEDIA_ROOT = tmp_path
     return tmp_path
+
+
+@pytest.fixture
+def review(book, user_with_username):
+    return Review.objects.create(
+        book=book,
+        user=user_with_username,
+        content="Example of book review.",
+        rating=5,
+    )

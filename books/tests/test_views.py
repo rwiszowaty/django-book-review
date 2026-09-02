@@ -724,3 +724,146 @@ class TestReviewView:
             book=book,
             user=user,
         ).exists()
+
+
+@pytest.mark.django_db
+class TestReviewUpdateView:
+    def test_user_can_access_edit_view(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            ),
+        )
+
+        assert response.status_code == 200
+
+    def test_edit_view_contains_curret_review_data(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            ),
+        )
+
+        assert response.context["form"].initial["content"] == (
+            "Example of book review."
+        )
+        assert response.context["form"].initial["rating"] == 5
+
+    def test_user_can_update_own_review(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            ),
+            {
+                "content": "Updated review.",
+                "rating": 3,
+            },
+        )
+
+        assert response.status_code == 302
+
+        review.refresh_from_db()
+
+        assert review.content == "Updated review."
+        assert review.rating == 3
+
+    def test_user_cannot_update_anothers_user_review(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+        django_user_model,
+    ):
+        second_user = django_user_model.objects.create(
+            email="second_user@example.com",
+            password="StrongPassword123!",
+            username="Second User",
+        )
+        client.force_login(second_user)
+
+        response = client.get(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            )
+        )
+
+        assert response.status_code == 404
+
+    def test_anonymous_user_is_redirected_to_login(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        response = client.get(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            ),
+        )
+
+        assert response.status_code == 302
+        assert "/accounts/login" in response.url
+
+    def test_book_detail_shows_edit_button_for_own_review(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert "Edytuj recenzję".encode() in response.content
+
+    def test_book_detail_does_not_show_edit_button_for_anonymous(
+        self,
+        client,
+        book,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert not "Edytuj recenzję".encode() in response.content

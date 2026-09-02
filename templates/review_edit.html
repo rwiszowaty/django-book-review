@@ -1,0 +1,82 @@
+{% extends "_base.html" %}
+
+{% block title %}Edytuj recenzję - {{ review.book.title }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a
+        href="{% url 'books:book_detail' review.book.slug %}"
+        class="back-to-books text-decoration-none"
+    >
+        &laquo; Powrót do książki
+    </a>
+</div>
+
+
+<div class="card border-0 shadow-sm">
+
+    <div class="card-body p-4">
+
+        <h1 class="h3 mb-4">
+            Edytuj recenzję
+        </h1>
+
+        <p class="text-muted">
+            {{ review.book.title }}
+        </p>
+
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div class="mb-3">
+
+                {{ form.content }}
+
+                {% for error in form.content.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="mb-3">
+
+                <label
+                    for="{{ form.rating.id_for_label }}"
+                    class="form-label"
+                >
+                    Ocena
+                </label>
+
+                {{ form.rating }}
+
+                {% for error in form.rating.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn btn-save"
+            >
+                Zapisz zmiany
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

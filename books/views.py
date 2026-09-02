@@ -1,6 +1,8 @@
 from django.db.models import Q
 from django.shortcuts import redirect
-from django.views.generic import ListView, DetailView
+from django.urls import reverse
+from django.views.generic import DetailView, ListView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import ReviewForm
 from .models import Author, Book, Genre, Review
@@ -97,3 +99,21 @@ class BookDetailView(DetailView):
             context["user_review"] = None
 
         return context
+
+
+class ReviewUpdateView(LoginRequiredMixin, UpdateView):
+    model = Review
+    form_class = ReviewForm
+    template_name = "review_edit.html"
+    context_object_name = "review"
+
+    def get_queryset(self):
+        return Review.objects.filter(
+            user=self.request.user,
+        )
+
+    def get_success_url(self):
+        return reverse(
+            "books:book_detail",
+            kwargs={"slug": self.object.book.slug},
+        )

@@ -153,6 +153,16 @@
                                 {{ review.created_at|date:"d.m.Y" }}
                             </small>
 
+                            {% if user.is_authenticated and review.user == user %}
+                                <div class="mt-2">
+                                    <a
+                                        href="{% url 'books:review_edit' review.pk %}"
+                                        class="btn btn-save btn-sm"
+                                    >
+                                        Edytuj recenzję
+                                    </a>
+                                </div>
+                            {% endif %}
                         </article>
 
                     {% endfor %}
