@@ -1,5 +1,4 @@
 from datetime import date
-
 import pytest
 
 from django.urls import reverse
@@ -946,6 +945,30 @@ class TestReviewView:
             user=user,
         ).exists()
 
+    def test_adding_review_shows_success_message(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+            {
+                "content": "Example of book review.",
+                "rating": 5,
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        messages = list(response.context["messages"])
+        assert str(messages[0]) == "Recenzja została dodana."
+
 
 @pytest.mark.django_db
 class TestReviewUpdateView:
@@ -1049,7 +1072,6 @@ class TestReviewUpdateView:
         self,
         client,
         review,
-        user_with_username,
     ):
         response = client.get(
             reverse(
@@ -1093,6 +1115,30 @@ class TestReviewUpdateView:
         )
 
         assert not "Edytuj recenzję".encode() in response.content
+
+    def test_updating_review_shows_success_message(
+        self,
+        client,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:review_edit",
+                kwargs={"pk": review.pk},
+            ),
+            {
+                "content": "Updated review.",
+                "rating": 1,
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        messages = list(response.context["messages"])
+        assert str(messages[0]) == "Recenzja została zaktualizowana."
 
 
 @pytest.mark.django_db
@@ -1202,3 +1248,23 @@ class TestReviewDeleteView:
         )
 
         assert not "Usuń recenzję".encode() in response.content
+
+    def test_deleting_review_shows_success_messages(
+        self,
+        client,
+        review,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "books:review_delete",
+                kwargs={"pk": review.pk},
+            ),
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        messages = list(response.context["messages"])
+        assert str(messages[0]) == "Recenzja została usunięta."
