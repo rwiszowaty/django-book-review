@@ -32,3 +32,20 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             "book",
         ).all()
         return context
+
+
+class ProfileEditView(LoginRequiredMixin, FormView):
+    template_name = "profile_edit.html"
+    form_class = UsernameForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("users:profile")

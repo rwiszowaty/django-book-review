@@ -1,0 +1,40 @@
+{% extends "_base.html" %}
+
+{% block title %}Edytuj profil{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a
+        href="{% url 'users:profile' %}"
+        class="back-to-books text-decoration-none"
+    >
+        &laquo; Powrót do profilu
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h1 class="h3 mb-4">Edytuj profil</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button
+                type="submit"
+                class="btn btn-save"
+            >
+                Zapisz zmiany
+            </button>
+
+            <a
+                href="{% url 'users:profile' %}"
+                class="btn btn-outline-secondary"
+            >
+                Anuluj
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
