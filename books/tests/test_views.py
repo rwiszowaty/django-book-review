@@ -232,6 +232,111 @@ class TestBookListView:
 
         assert "Nie znaleziono książek.".encode() in response.content
 
+    def test_book_list_default_orders_books_by_newest(self, client, books):
+
+        response = client.get(
+            reverse("books:book_list"),
+        )
+
+        result = list(response.context["books"])
+
+        assert result == list(reversed(books))[:10]
+
+    def test_book_list_can_sort_by_rating(
+        self,
+        client,
+        books,
+        user_with_username,
+    ):
+        Review.objects.create(
+            book=books[0],
+            user=user_with_username,
+            content="Review nr 1.",
+            rating=4,
+        )
+
+        Review.objects.create(
+            book=books[1],
+            user=user_with_username,
+            content="Review nr 2.",
+            rating=5,
+        )
+
+        Review.objects.create(
+            book=books[2],
+            user=user_with_username,
+            content="Review nr 3.",
+            rating=1,
+        )
+
+        response = client.get(
+            reverse("books:book_list"),
+            {"sort": "rating"},
+        )
+
+        result = list(response.context["books"])
+
+        assert result[0] == books[1]
+        assert result[1] == books[0]
+        assert result[2] == books[2]
+
+    def test_book_list_can_sort_by_title(self, client, books):
+        response = client.get(
+            reverse("books:book_list"),
+            {"sort": "title"},
+        )
+
+        result = list(response.context["books"])
+
+        assert (
+            result
+            == sorted(
+                books,
+                key=lambda book: book.title,
+            )[:10]
+        )
+
+    def test_book_list_can_sort_by_rating_with_search(
+        self,
+        client,
+        books,
+        user_with_username,
+    ):
+        Review.objects.create(
+            book=books[0],
+            user=user_with_username,
+            content="Review nr 1.",
+            rating=4,
+        )
+
+        Review.objects.create(
+            book=books[1],
+            user=user_with_username,
+            content="Review nr 2.",
+            rating=5,
+        )
+
+        Review.objects.create(
+            book=books[2],
+            user=user_with_username,
+            content="Review nr 3.",
+            rating=1,
+        )
+
+        response = client.get(
+            reverse("books:book_list"),
+            {
+                "q": "Book",
+                "sort": "rating",
+            },
+        )
+
+        result = list(response.context["books"])
+
+        assert result[0] == books[1]
+        assert result[1] == books[0]
+        assert result[2] == books[2]
+
 
 @pytest.mark.django_db
 class TestBookDetailView:
@@ -435,7 +540,7 @@ class TestBookDetailView:
 
         assert b"5" in response.content
 
-    def test_book_detail_contains_mulditple_reviews(
+    def test_book_detail_contains_multitple_reviews(
         self,
         client,
         book,
@@ -588,7 +693,7 @@ class TestBookDetailView:
         assert "Zaloguj się, aby dodać recenzję.".encode() in response.content
         assert b'name="content"' not in response.content
 
-    def test_book_detail_shows_averange_rating(
+    def test_book_detail_shows_average_rating(
         self,
         client,
         book,
@@ -861,7 +966,7 @@ class TestReviewUpdateView:
 
         assert response.status_code == 200
 
-    def test_edit_view_contains_curret_review_data(
+    def test_edit_view_contains_current_review_data(
         self,
         client,
         review,
@@ -918,16 +1023,27 @@ class TestReviewUpdateView:
             password="StrongPassword123!",
             username="Second User",
         )
+
         client.force_login(second_user)
 
-        response = client.get(
+        response = client.post(
             reverse(
                 "books:review_edit",
                 kwargs={"pk": review.pk},
-            )
+            ),
+            {
+                "content": "Changed review.",
+                "rating": 1,
+            },
         )
 
         assert response.status_code == 404
+
+        review.refresh_from_db()
+
+        assert review
+        assert review.content == "Example of book review."
+        assert review.rating == 5
 
     def test_anonymous_user_is_redirected_to_login(
         self,

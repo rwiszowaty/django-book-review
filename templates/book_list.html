@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label
                     for="author"
                     class="form-label"
@@ -122,7 +122,7 @@
                 </select>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label
                     for="genre"
                     class="form-label"
@@ -147,6 +147,37 @@
                             {{ genre.name }}
                         </option>
                     {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label
+                    for="sort"
+                    class="form-label"
+                >
+                    Sortowanie
+                </label>
+
+                <select
+                    name="sort"
+                    id="sort"
+                    class="form-select"
+                >
+                    <option value="">Najnowsze</option>
+
+                    <option
+                        value="rating"
+                        {% if request.GET.sort == "rating" %}selected{% endif %}
+                    >
+                        Najwyżej oceniane
+                    </option>
+
+                    <option
+                        value="title"
+                        {% if request.GET.sort == "title" %}selected{% endif %}
+                    >
+                        Alfabetycznie
+                    </option>
                 </select>
             </div>
 

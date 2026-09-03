@@ -1,6 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 
-from django.db.models import Avg, Q
+from django.db.models import Avg, F, Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import DeleteView, DetailView, ListView, UpdateView
@@ -17,11 +17,17 @@ class BookListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = Book.objects.prefetch_related("authors", "genres").all()
+        queryset = Book.objects.prefetch_related(
+            "authors",
+            "genres",
+        ).annotate(
+            average_rating=Avg("reviews__rating"),
+        )
 
         query = self.request.GET.get("q")
         genre = self.request.GET.get("genre")
         author = self.request.GET.get("author")
+        sort = self.request.GET.get("sort")
 
         if query:
             queryset = queryset.filter(
@@ -35,6 +41,16 @@ class BookListView(ListView):
 
         if author:
             queryset = queryset.filter(authors__id=author)
+
+        if sort == "rating":
+            queryset = queryset.order_by(
+                F("average_rating").desc(nulls_last=True),
+                "title",
+            )
+        elif sort == "title":
+            queryset = queryset.order_by("title")
+        else:
+            queryset = queryset.order_by("-id")
 
         return queryset.distinct()
 
