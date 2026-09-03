@@ -70,6 +70,15 @@ def user_with_username(user):
 
 
 @pytest.fixture
+def second_user(django_user_model):
+    return django_user_model.objects.create(
+        email="seconduser@example.com",
+        password="StrongPassword123!",
+        username="Second User",
+    )
+
+
+@pytest.fixture
 def image_file():
     image = Image.new("RGB", (100, 100), "white")
 

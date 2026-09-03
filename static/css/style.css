@@ -108,3 +108,8 @@
 .profile-icon:hover {
     color: var(--site-brown-light);
 }
+
+.rating-stars {
+    color: #e6b41f;
+    font-size: 1.6rem;
+}

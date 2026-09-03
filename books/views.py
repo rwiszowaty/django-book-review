@@ -1,4 +1,6 @@
-from django.db.models import Q
+from decimal import Decimal, ROUND_HALF_UP
+
+from django.db.models import Avg, Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import DeleteView, DetailView, ListView, UpdateView
@@ -86,6 +88,29 @@ class BookDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        average_rating = self.object.reviews.aggregate(average=Avg("rating"))["average"]
+
+        context["average_rating"] = average_rating
+        context["review_count"] = self.object.reviews.count()
+
+        if average_rating is not None:
+            rounded_rating = (Decimal(str(average_rating)) * 2).quantize(
+                Decimal("1"),
+                rounding=ROUND_HALF_UP,
+            ) / 2
+
+            full_stars = int(rounded_rating)
+            half_star = rounded_rating % 1 == Decimal("0.5")
+            empty_stars = 5 - full_stars - int(half_star)
+
+            context["rating_stars"] = (
+                ["bi-star-fill"] * full_stars
+                + (["bi-star-half"] if half_star else [])
+                + ["bi-star"] * empty_stars
+            )
+        else:
+            context["rating_stars"] = []
 
         if "form" not in context:
             context["form"] = ReviewForm()

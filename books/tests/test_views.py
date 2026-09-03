@@ -588,6 +588,122 @@ class TestBookDetailView:
         assert "Zaloguj się, aby dodać recenzję.".encode() in response.content
         assert b'name="content"' not in response.content
 
+    def test_book_detail_shows_averange_rating(
+        self,
+        client,
+        book,
+        review,
+        second_user,
+    ):
+        Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second review.",
+            rating=1,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == 200
+        assert response.context["average_rating"] == 3
+
+    def test_book_detail_without_reviews_has_no_average_rating(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == 200
+        assert response.context["average_rating"] is None
+        assert response.context["rating_stars"] == []
+        assert response.context["review_count"] == 0
+
+    def test_book_detail_displays_average_rating(
+        self,
+        client,
+        book,
+        review,
+        second_user,
+    ):
+        Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second review.",
+            rating=2,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert b"3.50/5" in response.content
+
+    def test_book_detail_rating_stars(
+        self,
+        client,
+        book,
+        review,
+        second_user,
+    ):
+        Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second review.",
+            rating=2,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.context["rating_stars"] == [
+            "bi-star-fill",
+            "bi-star-fill",
+            "bi-star-fill",
+            "bi-star-half",
+            "bi-star",
+        ]
+
+    def test_book_detail_shows_review_count(
+        self,
+        client,
+        book,
+        review,
+        second_user,
+    ):
+        Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second review.",
+            rating=2,
+        )
+
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.context["review_count"] == 2
+
 
 @pytest.mark.django_db
 class TestReviewView:
