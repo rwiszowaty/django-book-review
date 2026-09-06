@@ -4,6 +4,8 @@ from django.views.generic import FormView, TemplateView
 
 from .forms import UsernameForm
 
+from books.utils import get_rating_stars
+
 
 class SetUsernameView(LoginRequiredMixin, FormView):
     template_name = "set_username.html"
@@ -27,10 +29,18 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["profile_user"] = self.request.user
-        context["reviews"] = self.request.user.reviews.select_related(
+
+        reviews = self.request.user.reviews.select_related(
             "book",
         ).all()
+
+        for review in reviews:
+            review.rating_stars = get_rating_stars(review.rating)
+
+        context["profile_user"] = self.request.user
+        context["reviews"] = reviews
+        context["review_count"] = reviews.count()
+
         return context
 
 

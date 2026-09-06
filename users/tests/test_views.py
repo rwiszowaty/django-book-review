@@ -84,9 +84,10 @@ class TestProfileView:
         assert response.status_code == 302
         assert "/accounts/login/" in response.url
 
-    def test_profile_contains_username(
+    def test_profile_contains_users_data(
         self,
         client,
+        review,
         user_with_username,
     ):
         client.force_login(user_with_username)
@@ -95,7 +96,15 @@ class TestProfileView:
             reverse("users:profile"),
         )
 
-        assert user_with_username.username in response.content.decode()
+        content = response.content.decode()
+
+        assert user_with_username.username in content
+        assert user_with_username.email in content
+        assert (
+            response.context["profile_user"].date_joined
+            == user_with_username.date_joined
+        )
+        assert response.context["review_count"] == 1
 
     def test_profile_contains_user_reviews(
         self,
@@ -165,7 +174,6 @@ class TestProfileView:
         assert "Nie masz jeszcze żadnych recenzji." in content
 
 
-@pytest.mark.django_db
 class TestProfileEditView:
     def test_authenticated_user_can_access_profile_edit(
         self,
