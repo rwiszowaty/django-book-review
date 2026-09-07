@@ -191,3 +191,14 @@
 .profile-icon:hover {
     color: var(--site-brown-light);
 }
+
+.review-user {
+    color: var(--site-brown);
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.review-user:hover {
+    color: var(--site-brown-hover);
+}

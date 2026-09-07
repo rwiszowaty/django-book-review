@@ -808,6 +808,27 @@ class TestBookDetailView:
 
         assert response.context["review_count"] == 2
 
+    def test_review_author_links_to_public_profile(
+        self,
+        client,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "books:book_detail",
+                kwargs={
+                    "slug": review.book.slug,
+                },
+            )
+        )
+
+        expected_url = reverse(
+            "users:public_profile",
+            kwargs={"username": review.user.username},
+        )
+
+        assert expected_url in response.content.decode()
+
 
 @pytest.mark.django_db
 class TestReviewView:

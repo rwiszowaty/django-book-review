@@ -1,8 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
-from django.views.generic import FormView, TemplateView
+from django.views.generic import DetailView, FormView, TemplateView
 
 from .forms import UsernameForm
+from .models import CustomUser
 
 from books.utils import get_rating_stars
 
@@ -59,3 +60,28 @@ class ProfileEditView(LoginRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse("users:profile")
+
+
+class PublicProfileView(DetailView):
+    model = CustomUser
+    template_name = "public_profile.html"
+    context_object_name = "profile_user"
+    slug_field = "username"
+    slug_url_kwarg = "username"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        reviews = self.object.reviews.select_related(
+            "book",
+        ).all()
+
+        for review in reviews:
+            review.rating_stars = get_rating_stars(
+                review.rating,
+            )
+
+        context["reviews"] = reviews
+        context["review_count"] = reviews.count()
+
+        return context

@@ -164,7 +164,12 @@
                                 align-items-center mb-2"
                             >
                                 <strong>
-                                    {{ review.user.username }}
+                                    <a
+                                        href="{% url 'users:public_profile' username=review.user.username %}"
+                                        class="review-user"
+                                    >
+                                        {{ review.user.username }}
+                                    </a>
                                 </strong>
 
                                 <span>

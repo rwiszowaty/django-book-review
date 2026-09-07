@@ -96,6 +96,15 @@ def user_with_username(django_user_model):
 
 
 @pytest.fixture
+def second_user(django_user_model):
+    return django_user_model.objects.create(
+        email="seconduser@example.com",
+        password="StrongPassword123!",
+        username="Second User",
+    )
+
+
+@pytest.fixture
 def book():
     return Book.objects.create(
         title="The great hunt",

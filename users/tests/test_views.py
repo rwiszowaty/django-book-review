@@ -281,3 +281,158 @@ class TestProfileEditView:
         user_with_username.refresh_from_db()
 
         assert user_with_username.username
+
+
+@pytest.mark.django_db
+class TestPublicProfileView:
+    def test_user_can_access_public_profile(
+        self,
+        client,
+        user_with_username,
+        second_user,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": second_user.username,
+                },
+            )
+        )
+
+        assert response.status_code == 200
+
+    def test_anonymous_user_can_access_public_profile(
+        self,
+        client,
+        user_with_username,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            )
+        )
+
+        assert response.status_code == 200
+
+    def test_public_profile_contains_user_data(
+        self,
+        client,
+        user_with_username,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            )
+        )
+
+        content = response.content.decode()
+
+        assert user_with_username.username in content
+        assert user_with_username.email not in content
+        assert review.content in content
+        assert response.context["review_count"] == 1
+
+    def test_public_profile_does_not_contain_other_users_reviews(
+        self,
+        client,
+        book,
+        user_with_username,
+        review,
+        second_user,
+    ):
+        other_review = Review.objects.create(
+            book=book,
+            user=second_user,
+            content="Second review.",
+            rating=5,
+        )
+
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            )
+        )
+
+        content = response.content.decode()
+
+        assert review.content in content
+        assert other_review.content not in content
+
+    def test_public_profile_contains_rating_stars(
+        self,
+        client,
+        user_with_username,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            )
+        )
+
+        assert "bi-star-fill" in response.content.decode()
+
+    def test_public_profile_for_user_without_reviews(
+        self,
+        client,
+        user_with_username,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            )
+        )
+
+        content = response.content.decode()
+
+        assert "Ten użytkownik nie ma jeszcze żadnych recenzji." in content
+
+    def test_public_profile_returns_404_for_nonexistent_user(
+        self,
+        client,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={"username": "nonexistent"},
+            )
+        )
+
+        assert response.status_code == 404
+
+    def test_public_profile_contains_link_to_books(
+        self,
+        client,
+        user_with_username,
+    ):
+        response = client.get(
+            reverse(
+                "users:public_profile",
+                kwargs={
+                    "username": user_with_username.username,
+                },
+            ),
+        )
+
+        expected_url = reverse("books:book_list")
+
+        assert expected_url in response.content.decode()
