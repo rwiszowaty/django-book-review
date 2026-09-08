@@ -30,6 +30,48 @@ class TestBookListApiView:
         assert response.data[0]["title"] == book.title
         assert response.data[0]["slug"] == book.slug
 
+    def test_book_list_returns_extended_book_data(
+        self,
+        client,
+        book,
+        author,
+        genre,
+        review,
+    ):
+        book.authors.add(author)
+        book.genres.add(genre)
+
+        response = client.get(
+            reverse(
+                "api_book_list",
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.data[0]
+
+        assert data["authors"] == [str(author)]
+        assert data["genres"] == [str(genre)]
+        assert data["average_rating"] == 5.00
+
+    def test_book_list_return_null_average_rating_without_reviews(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "api_book_list",
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.data[0]
+
+        assert data["average_rating"] is None
+
 
 @pytest.mark.django_db
 class TestBookDetailApiView:
