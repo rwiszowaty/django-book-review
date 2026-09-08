@@ -1,7 +1,7 @@
 from django.db.models import Avg
 from rest_framework import serializers
 
-from books.models import Book
+from books.models import Book, Review
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -24,3 +24,18 @@ class BookSerializer(serializers.ModelSerializer):
         return obj.reviews.aggregate(
             average=Avg("rating"),
         )["average"]
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Review
+        fields = (
+            "id",
+            "user",
+            "content",
+            "rating",
+            "created_at",
+            "updated_at",
+        )

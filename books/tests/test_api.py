@@ -2,6 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from books.models import Book, Review
+
 
 @pytest.mark.django_db
 class TestBookListApiView:
@@ -104,3 +106,79 @@ class TestBookDetailApiView:
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+class TestBookReviewListApi:
+    def test_book_reviews_returns_reviews(
+        self,
+        client,
+        book,
+        review,
+    ):
+        response = client.get(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+
+        data = response.data[0]
+
+        assert data["id"] == review.id
+        assert data["user"] == str(review.user)
+        assert data["content"] == review.content
+        assert data["rating"] == review.rating
+
+    def test_book_reviews_returns_empty_list_without_reviews(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == []
+
+    def test_book_reviews_return_only_reviews_for_selected_book(
+        self,
+        client,
+        book,
+        review,
+        user_with_username,
+    ):
+        other_book = Book.objects.create(
+            title="Other book",
+            slug="other-book",
+            isbn="123456790321",
+        )
+
+        other_review = Review.objects.create(
+            book=other_book,
+            user=user_with_username,
+            content="Other review.",
+            rating=3,
+        )
+
+        response = client.get(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+
+        data = response.data[0]
+
+        assert data["id"] == review.id
+        assert data["id"] != other_review.id
