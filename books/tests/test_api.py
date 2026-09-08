@@ -29,3 +29,36 @@ class TestBookListApiView:
         assert response.data[0]["id"] == book.id
         assert response.data[0]["title"] == book.title
         assert response.data[0]["slug"] == book.slug
+
+
+@pytest.mark.django_db
+class TestBookDetailApiView:
+    def test_book_detail_return_book(
+        self,
+        client,
+        book,
+    ):
+        response = client.get(
+            reverse(
+                "api_book_detail",
+                kwargs={"slug": book.slug},
+            )
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["id"] == book.id
+        assert response.data["title"] == book.title
+        assert response.data["slug"] == book.slug
+
+    def test_book_detail_returns_404_for_invalid_slug(
+        self,
+        client,
+    ):
+        response = client.get(
+            reverse(
+                "api_book_detail",
+                kwargs={"slug": "non-existent-book"},
+            )
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
