@@ -260,3 +260,89 @@ class TestBookReviewListCreateApi:
         assert not Review.objects.filter(
             book=book,
         ).exists()
+
+    @pytest.mark.parametrize("rating", [0, 6])
+    def test_user_cannot_create_review_with_invalid_rating(
+        self,
+        client,
+        book,
+        user_with_username,
+        rating,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Book review.",
+                "rating": rating,
+            },
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "rating" in response.data
+        assert not Review.objects.filter(
+            book=book,
+            user=user_with_username,
+        ).exists()
+
+    def test_user_cannot_create_review_with_empty_content(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "content" in response.data
+        assert not Review.objects.filter(
+            book=book,
+            user=user_with_username,
+        ).exists()
+
+    def test_user_cannot_create_second_review_for_same_book(
+        self,
+        client,
+        book,
+        user_with_username,
+        review,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Another review.",
+                "rating": 4,
+            },
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Użytkownik może dodać tylko jedną recenzję do książki." in str(
+            response.data
+        )
+        assert (
+            Review.objects.filter(
+                book=book,
+                user=user_with_username,
+            ).count()
+            == 1
+        )

@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView
 
 from books.models import Book, Review
@@ -28,6 +29,14 @@ class BookReviewListCreateApiView(ListCreateAPIView):
         book = Book.objects.get(
             slug=self.kwargs["slug"],
         )
+
+        if Review.objects.filter(
+            book=book,
+            user=self.request.user,
+        ).exists():
+            raise ValidationError(
+                "Użytkownik może dodać tylko jedną recenzję do książki."
+            )
 
         serializer.save(
             user=self.request.user,
