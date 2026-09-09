@@ -109,7 +109,7 @@ class TestBookDetailApiView:
 
 
 @pytest.mark.django_db
-class TestBookReviewListApi:
+class TestBookReviewListCreateApi:
     def test_book_reviews_returns_reviews(
         self,
         client,
@@ -182,3 +182,81 @@ class TestBookReviewListApi:
 
         assert data["id"] == review.id
         assert data["id"] != other_review.id
+
+    def test_authenticated_user_with_username_can_create_review(
+        self,
+        client,
+        book,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["content"] == "Book review."
+        assert response.data["rating"] == 5
+        assert response.data["user"] == str(user_with_username)
+
+        review = Review.objects.get(
+            book=book,
+            user=user_with_username,
+        )
+
+        assert review.content == "Book review."
+        assert review.rating == 5
+
+    def test_authenticated_user_withour_username_cannot_create_review(
+        self,
+        client,
+        book,
+        user,
+    ):
+        client.force_login(user)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert not Review.objects.filter(
+            book=book,
+            user=user,
+        ).exists()
+
+    def test_anonymous_user_cannot_create_review(
+        self,
+        client,
+        book,
+    ):
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Book review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert not Review.objects.filter(
+            book=book,
+        ).exists()

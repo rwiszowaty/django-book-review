@@ -3,7 +3,7 @@ from django.urls import path
 from books.api.views import (
     BookDetailApiView,
     BookListApiView,
-    BookReviewListApiView,
+    BookReviewListCreateApiView,
 )
 
 urlpatterns = [
@@ -19,7 +19,7 @@ urlpatterns = [
     ),
     path(
         "book/<slug:slug>/reviews/",
-        BookReviewListApiView.as_view(),
+        BookReviewListCreateApiView.as_view(),
         name="api_book_reviews",
     ),
 ]
