@@ -346,3 +346,63 @@ class TestBookReviewListCreateApi:
             ).count()
             == 1
         )
+
+    def test_cannot_create_review_for_nonexistent_book(
+        self,
+        client,
+        user_with_username,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.post(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": "non-existent-book"},
+            ),
+            data={
+                "content": "Example review.",
+                "rating": 5,
+            },
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_review_endpoint_does_not_allow_update(
+        self,
+        client,
+        book,
+        user_with_username,
+        review,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.put(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+            data={
+                "content": "Updated review.",
+                "rating": 4,
+            },
+        )
+
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+    def test_review_endpoint_does_not_allow_delete(
+        self,
+        client,
+        book,
+        user_with_username,
+        review,
+    ):
+        client.force_login(user_with_username)
+
+        response = client.delete(
+            reverse(
+                "api_book_reviews",
+                kwargs={"slug": book.slug},
+            ),
+        )
+
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED

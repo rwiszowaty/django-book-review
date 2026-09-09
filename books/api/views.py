@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView
 
@@ -26,7 +28,8 @@ class BookReviewListCreateApiView(ListCreateAPIView):
         ).select_related("user")
 
     def perform_create(self, serializer):
-        book = Book.objects.get(
+        book = get_object_or_404(
+            Book,
             slug=self.kwargs["slug"],
         )
 
