@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third party
     "rest_framework",
+    "drf_spectacular",
     "allauth",
     "allauth.account",
     # Local
@@ -159,8 +160,8 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 SITE_NAME = "Recenzje książek"
 SITE_ID = 1
-# Allauth settings
 
+# Allauth settings
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
@@ -178,3 +179,14 @@ ACCOUNT_FORMS = {
 }
 
 LOGIN_REDIRECT_URL = "/"
+
+# REST framework settings
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Django Book Review API",
+    "DESCRIPTION": "API for browsing books and managing book reviews.",
+    "VERSION": "1.0.0",
+}

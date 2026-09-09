@@ -215,7 +215,7 @@ class TestBookReviewListCreateApi:
         assert review.content == "Book review."
         assert review.rating == 5
 
-    def test_authenticated_user_withour_username_cannot_create_review(
+    def test_authenticated_user_without_username_cannot_create_review(
         self,
         client,
         book,

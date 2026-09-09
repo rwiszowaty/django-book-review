@@ -20,12 +20,29 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
     path("users/", include("users.urls")),
     path("", include("books.urls")),
     path("api/", include("books.api.urls")),
+    path(
+        "api/schema/",
+        SpectacularAPIView.as_view(),
+        name="api_schema",
+    ),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(
+            url_name="api_schema",
+        ),
+        name="api_docs",
+    ),
 ]
 
 if settings.DEBUG:
