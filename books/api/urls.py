@@ -18,7 +18,7 @@ urlpatterns = [
         name="api_book_detail",
     ),
     path(
-        "book/<slug:slug>/reviews/",
+        "books/<slug:slug>/reviews/",
         BookReviewListCreateApiView.as_view(),
         name="api_book_reviews",
     ),
